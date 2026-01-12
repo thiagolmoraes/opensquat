@@ -1,0 +1,27 @@
+[project]
+name = "opensquat"
+version = "2.1.2"
+description = "Domain squatting and phishing detection library"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "black>=25.12.0",
+    "codecov>=2.1.13",
+    "colorama>=0.4.6",
+    "confusable-homoglyphs>=3.3.1",
+    "coverage>=7.13.1",
+    "dnspython>=2.8.0",
+    "flake8>=7.3.0",
+    "homoglyphs>=2.0.4",
+    "numpy>=2.4.1",
+    "packaging>=25.0",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "requests>=2.32.5",
+    "setuptools>=80.9.0",
+    "strsimpy>=0.2.1",
+]
+
+[project.scripts]
+opensquat = "opensquat.cli:main"

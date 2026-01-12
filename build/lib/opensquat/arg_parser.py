@@ -1,0 +1,164 @@
+# -*- coding: utf-8 -*-
+# Module: arg_parser.py
+"""
+openSquat.
+
+(c) Andre Tenreiro
+
+* https://github.com/atenreiro/opensquat
+
+software licensed under GNU version 3
+
+"""
+import argparse
+
+
+
+def validate_type(file_type):
+    """
+    Validate file_type.
+
+    Args:
+        file_type: string containing file type, can only be txt, json or csv.
+
+    Return:
+        file_type
+
+    Raise:
+        If value is not valid, raise an exception to argparse
+    """
+    file_type = str(file_type)
+
+    if (file_type != "txt") and (file_type != "json") and (file_type != "csv"):
+        raise argparse.ArgumentTypeError("File format unkown!")
+    return file_type
+
+
+def validate_confidence(confidence_level):
+    """
+    Validate confidence_level.
+
+    Args:
+        confidence_level: int containing confidence_level, can only be an int
+        between 0 and 4.
+
+    Return:
+        confidence_level
+
+    Raise:
+        If value is not valid, raise an exception to argparse
+
+    """
+    confidence_level = int(confidence_level)
+
+    if confidence_level not in range(0, 5):
+        raise argparse.ArgumentTypeError("confidence must be between 0 and 4")
+    return confidence_level
+
+
+def get_args():
+    """
+    Parser main function.
+
+    Args:
+        none
+
+    Return:
+        args: returns arguments
+    """
+    parser = argparse.ArgumentParser(description="openSquat")
+    parser.add_argument(
+        "-k",
+        "--keywords",
+        type=str,
+        default="keywords.txt",
+        help="keywords file (default: keywords.txt)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="results.txt",
+        help="output filename (default: results.txt)",
+    )
+    parser.add_argument(
+        "-c",
+        "--confidence",
+        type=validate_confidence,
+        default=1,
+        help="0 (very high), 1 (high), 2 (medium), 3 (low),"
+        "4 (very low) (default: 1)",
+    )
+    parser.add_argument(
+        "-t",
+        "--type",
+        type=validate_type,
+        default="txt",
+        help="output file type [txt|json|csv] (default: txt)",
+    )
+    parser.add_argument(
+        "-d",
+        "--domains",
+        type=str,
+        default="",
+        help="update from FILE instead of downloading new domains",
+    )
+    parser.add_argument(
+        "-p",
+        "--period",
+        type=str,
+        default=None,
+        help=argparse.SUPPRESS,  # Hide from help since deprecated
+    )
+
+    parser.add_argument(
+        "-m",
+        "--method",
+        type=str,
+        choices=("Levenshtein", "JaroWinkler"),
+        default="Levenshtein",
+        help="method which is used to calculate similarity",
+    )
+
+    parser.add_argument(
+        "--ct",
+        action="store_true",
+        help="search in certificate transparency",
+    )
+
+    parser.add_argument(
+        "--dns",
+        action="store_true",
+        help="Check if domain is flagged by Quad9 DNS"
+    )
+
+    parser.add_argument(
+        "--phishing",
+        type=str,
+        default="",
+        help="search known and active Phishing sites (arg: output.txt)",
+    )
+    parser.add_argument(
+        "--subdomains",
+        action="store_true",
+        help="search for subdomains from flagged domains",
+    )
+    parser.add_argument(
+        "--portcheck",
+        action="store_true",
+        help="Verify is port 80/443 is open",
+    )
+    parser.add_argument(
+        "--vt",
+        action="store_true",
+        help="validate against VirusTotal",
+    )
+
+    args = parser.parse_args()
+
+    # Check for deprecated -p/--period argument
+    if args.period is not None:
+        print("\n[ERROR] The weekly/monthly feeds have been deprecated. Please use the daily feeds.\n")
+        exit(1)
+
+    return args

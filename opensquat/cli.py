@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# opensquat.py
 """
-openSquat.
+openSquat CLI.
+
+Command-line interface for openSquat library.
 
 * https://github.com/atenreiro/opensquat
 
@@ -14,9 +15,9 @@ import functools
 import concurrent.futures
 
 from colorama import init, Fore, Style
-from opensquat import __VERSION__, vt
+from opensquat import __VERSION__
 from opensquat import arg_parser, output, app, phishing, check_update
-from opensquat import port_check
+from opensquat import port_check, vt
 
 
 def signal_handler(sig, frame):
@@ -24,21 +25,9 @@ def signal_handler(sig, frame):
     print("\n[*] openSquat is terminating...\n")
     exit(0)
 
-if __name__ == "__main__":
 
-    signal.signal(signal.SIGINT, signal_handler)
-
-    init()
-
-    RED, WHITE, GREEN, END, YELLOW, BOLD = (
-        "\033[91m",
-        "\33[97m",
-        "\033[1;32m",
-        "\033[0m",
-        "\33[93m",
-        "\033[1m",
-    )
-
+def print_logo():
+    """Print the openSquat logo."""
     logo = (
         Style.BRIGHT + Fore.GREEN +
         """
@@ -56,9 +45,16 @@ if __name__ == "__main__":
                     (c) Andre Tenreiro - https://github.com/atenreiro/opensquat
     """ + Style.RESET_ALL
     )
-
     print(logo)
     print("\t\t\tversion " + __VERSION__ + "\n")
+
+
+def main():
+    """Main CLI entry point."""
+    signal.signal(signal.SIGINT, signal_handler)
+
+    init()
+    print_logo()
 
     args = arg_parser.get_args()
 
@@ -69,11 +65,10 @@ if __name__ == "__main__":
         args.confidence,
         args.domains,
         args.method,
-        args.dns,
-        args.ct
+        args.dns
     )
 
-    if args.subdomains or args.vt or args.subdomains or args.phishing \
+    if args.subdomains or args.vt or args.phishing \
         or args.portcheck:
         print("\n[*] Total found:", len(file_content))
 
@@ -112,16 +107,16 @@ if __name__ == "__main__":
             if malicious > 0:
                 print(
                     Style.BRIGHT + Fore.RED +
-                    "[*] found:", domain, "({})".format(str(malicious)) +
+                    f"[*] found: {domain} ({malicious})" +
                     Style.RESET_ALL,
-                    )
+                )
                 list_aux.append(domain)
             elif malicious < 0:
                 print(
                     Style.BRIGHT + Fore.YELLOW +
-                    "[*] VT is throttling the response:", domain +
+                    f"[*] VT is throttling the response: {domain}" +
                     Style.RESET_ALL,
-                    )
+                )
                 list_aux.append(domain)
         file_content = list_aux
         print("[*] Total found:", len(file_content))
@@ -138,8 +133,10 @@ if __name__ == "__main__":
         time.sleep(1)
         
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futs = [ (domain, executor.submit(functools.partial(port_check.PortCheck().main, domain)))
-                for domain in file_content ]
+            futs = [
+                (domain, executor.submit(functools.partial(port_check.PortCheck().main, domain)))
+                for domain in file_content
+            ]
         
         for tested_domain, result_domain_port_check in futs:
             ports = result_domain_port_check.result()
@@ -147,7 +144,7 @@ if __name__ == "__main__":
                 list_aux.append(tested_domain)
                 print(
                     Fore.YELLOW +
-                    "[*]", tested_domain, ports, "" +
+                    "[*]", tested_domain, ports +
                     Style.RESET_ALL
                     )
         
@@ -160,7 +157,7 @@ if __name__ == "__main__":
     # Print summary
     print("\n")
     print(
-        Style.BRIGHT+Fore.GREEN +
+        Style.BRIGHT + Fore.GREEN +
         "+---------- Summary Squatting ----------+" +
         Style.RESET_ALL)
 
@@ -175,3 +172,7 @@ if __name__ == "__main__":
     print("")
 
     check_update.CheckUpdate().main()
+
+
+if __name__ == "__main__":
+    main()
