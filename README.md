@@ -5,7 +5,7 @@
 <h1 align="center">openSquat</h1>
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/python-3.6+-blue.svg" alt="Python 3.6+"></a>
+  <a href="#"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"></a>
   <a href="https://github.com/atenreiro/opensquat/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
   <a href="https://github.com/atenreiro/opensquat/issues"><img src="https://img.shields.io/github/issues/atenreiro/opensquat" alt="GitHub issues"></a>
   <a href="https://github.com/atenreiro/opensquat/stargazers"><img src="https://img.shields.io/github/stars/atenreiro/opensquat" alt="GitHub stars"></a>
@@ -55,24 +55,72 @@ openSquat is an **Open Source Intelligence (OSINT)** security tool that identifi
 
 ## 🚀 Quick Start
 
+### Option 1: Using Docker (Recommended)
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/atenreiro/opensquat
 cd opensquat
 
-# 2. Install dependencies
-pip install -r requirements.txt
+# 2. Build the Docker image
+docker build -t opensquat:latest .
 
 # 3. Run with your keywords
-python opensquat.py -k keywords.txt
+docker run --rm \
+  -v $(pwd)/results:/app/results \
+  -v $(pwd)/examples:/app/examples \
+  opensquat -k examples/keywords.txt -o results/output.txt
+```
+
+### Option 2: Using uv 
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/atenreiro/opensquat
+cd opensquat
+
+# 2. Install using uv
+uv sync
+
+# 3. Run with your keywords
+uv run opensquat -k examples/keywords.txt -o results.txt
+```
+
+### Option 3: Using pip
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/atenreiro/opensquat
+cd opensquat
+
+# 2. Install the package
+pip install -e .
+
+# 3. Run with your keywords
+opensquat -k examples/keywords.txt -o results.txt
+```
+
+### Option 4: Using setup.py
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/atenreiro/opensquat
+cd opensquat
+
+# 2. Install using setup.py
+python setup.py install
+
+# 3. Run with your keywords
+opensquat -k examples/keywords.txt -o results.txt
 ```
 
 ---
 
 ## 📦 Requirements
 
-- **Python 3.6+**
-- Dependencies: `colorama`, `dnspython`, `requests`, `beautifulsoup4`
+- **Python 3.11+** (required for numpy 2.4.1+)
+- Dependencies: See `pyproject.toml` for full list
+- Optional: Docker for containerized deployment
 
 ---
 
@@ -81,40 +129,72 @@ python opensquat.py -k keywords.txt
 ### Basic Commands
 
 ```bash
-# Default run
-python opensquat.py
+# Show help
+opensquat -h
 
-# Show all options
-python opensquat.py -h
+# Default run (uses keywords.txt)
+opensquat
 
 # Use custom keywords file
-python opensquat.py -k my_keywords.txt
+opensquat -k my_keywords.txt
+
+# Specify output file
+opensquat -k keywords.txt -o results.txt
 ```
 
 ### Validation Options
 
 ```bash
 # DNS validation via Quad9
-python opensquat.py --dns
+opensquat -k keywords.txt --dns
 
 # Check Certificate Transparency logs
-python opensquat.py --ct
+opensquat -k keywords.txt --ct
 
 # Scan for open ports (80/443)
-python opensquat.py --portcheck
+opensquat -k keywords.txt --portcheck
 
 # Cross-reference phishing databases
-python opensquat.py --phishing results.txt
+opensquat -k keywords.txt --phishing results.txt
+
+# VirusTotal validation
+opensquat -k keywords.txt --vt
+
+# Search for subdomains
+opensquat -k keywords.txt --subdomains
 ```
 
 ### Output Formats
 
 ```bash
 # Save as JSON
-python opensquat.py -o results.json -t json
+opensquat -k keywords.txt -o results.json -t json
 
 # Save as CSV
-python opensquat.py -o results.csv -t csv
+opensquat -k keywords.txt -o results.csv -t csv
+
+# Save as TXT (default)
+opensquat -k keywords.txt -o results.txt -t txt
+```
+
+### Using as a Python Library
+
+```python
+from opensquat import Domain, Phishing, VirusTotal
+
+# Detect domain squatting
+domain_checker = Domain()
+results = domain_checker.main(
+    keywords_file="keywords.txt",
+    confidence_level=1,
+    domains_file="",
+    method="Levenshtein",
+    dns=False
+)
+
+# Check phishing sites
+phishing_checker = Phishing()
+phishing_results = phishing_checker.main("paypal")
 ```
 
 ### Confidence Levels
@@ -156,7 +236,11 @@ Run daily via crontab:
 
 ```bash
 # Every day at 8 AM (feeds update ~7:30 AM UTC)
-0 8 * * * /path/to/opensquat/opensquat.py -k keywords.txt -o results.json -t json
+# Using installed CLI
+0 8 * * * /path/to/venv/bin/opensquat -k keywords.txt -o results.json -t json
+
+# Or using Docker
+0 8 * * * docker run --rm -v /path/to/results:/app/results opensquat -k keywords.txt -o results.json -t json
 ```
 
 ---
